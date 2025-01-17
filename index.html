@@ -1,63 +1,62 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
 
 <head>
-    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>北京旅游景点</title>
-    <style type="text/css">
-        html {
-            height: 100%
-        }
-
-        body {
-            height: 100%;
-            margin: 0px;
-            padding: 0px
-        }
-
-        #container {
-            height: 100%
-        }
-    </style>
-    <script type="text/javascript"
-        src="https://api.map.baidu.com/api?v=1.0&type=webgl&ak=GZQT8L85QtZfRfSYEoW82abcNiaGjKmw"></script>
-    <script src="bj.js"></script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />
+    <title>地图显示</title>
 </head>
 
 <body>
-    <div id="selectors">
-        <input id="bowuguan" class="inputCheckBox" type="checkbox" checked="checked">博物馆</input>
-        <input id="jingdian" class="inputCheckBox" type="checkbox" checked="checked">景点</input>
-        <input id="ertong" class="inputCheckBox" type="checkbox" checked="checked">儿童</input>
-        <input id="jucahng" class="inputCheckBox" type="checkbox">剧场</input>
-        <input id="simiao" class="inputCheckBox" type="checkbox">寺庙</input>
-        <input id="shangchang" class="inputCheckBox" type="checkbox">商场</input>
-        <input type="text" id="start" placeholder="起点">
-        <input type="text" id="end" placeholder="终点">
-        <button onclick="searchTransit()">公交</button>
-        <button onclick="searchDriving()">自驾</button>
-        <br /><br />
+    <div class="condition">
+        <div style="width: 60px;">
+            <input id="bowuguan" class="inputCheckBox" type="checkbox" checked="checked">博物馆</input>
+        </div>
+        <div style="width: 50px;">
+            <input id="jingdian" class="inputCheckBox" type="checkbox" checked="checked">景点</input>
+        </div>
+        <div style="width: 50px;">
+            <input id="ertong" class="inputCheckBox" type="checkbox" checked="checked">儿童</input>
+        </div>
+        <div style="width: 50px;">
+            <input id="juchang" class="inputCheckBox" type="checkbox">剧场</input>
+        </div>
+        <div style="width: 50px;">
+            <input id="simiao" class="inputCheckBox" type="checkbox">寺庙</input>
+        </div>
+        <div style="width: 50px;">
+            <input id="shangchang" class="inputCheckBox" type="checkbox">商场</input>
+        </div>
+        <div style="width: 50px;">
+            <input id="huabing" class="inputCheckBox" type="checkbox">滑冰</input>
+        </div>
+        <div style="width: 200px;">
+            <input type="text" id="start" placeholder="起点">
+        </div>
+        <div style="width: 200px;">
+            <input type="text" id="end" placeholder="终点">
+        </div>
+        <div style="width: 40px;">
+            <button onclick="searchTransit()">公交</button>
+        </div>
+        <div style="width: 40px;">
+            <button onclick="searchDriving()">自驾</button>
+        </div>
     </div>
+    <br />
     <div id="container"></div>
-    <div id="panel" style="width: 100%; height: 200px; overflow: auto;"></div>
 
-    <script type="text/javascript">
-        const map = new BMapGL.Map("container");
-
-        // 创建地图实例 
-        const point = new BMapGL.Point(116.404, 39.915);
-        // 创建点坐标 
-        map.centerAndZoom(point, 15);
-        // 初始化地图，设置中心点坐标和地图级别 
-
-        map.enableScrollWheelZoom(true);     //开启鼠标滚轮缩放
-        const scaleCtrl = new BMapGL.ScaleControl();  // 添加比例尺控件
-        map.addControl(scaleCtrl);
-        const zoomCtrl = new BMapGL.ZoomControl();  // 添加缩放控件
-        map.addControl(zoomCtrl);
-
-        // https://api.map.baidu.com/lbsapi/getpoint/index.html
+    <!-- 加载地图JSAPI脚本 -->
+    <script src="https://webapi.amap.com/maps?v=2.0&key=bdfdcd1e62e20e2d27d027d457c9463e"></script>
+    <script src="bj.js"></script>
+    <script>
+        var map = new AMap.Map('container', {
+            viewMode: '2D', // 默认使用 2D 模式，如果希望使用带有俯仰角的 3D 模式，请设置 viewMode: '3D'
+            zoom: 12, // 初始化地图层级
+            center: [116.397428, 39.90923] // 初始化地图中心点
+        });
 
         const selectData = (event) => {
             const value = bjData[event.id]
@@ -84,92 +83,57 @@
             }
         }
 
+        function removeOverlay(array) {
+            const titles = array.map(e => e[2])
+            var allOverlays = map.getAllOverlays('marker');
+            for (allOverlay of allOverlays) {
+                if (titles.includes(allOverlay.dom.title)) {
+                    map.remove(allOverlay); //清除 marker
+                }
+            }
+        }
+
         function addOverlay(array, color) {
             array.forEach(function (item, index) {
-                map.addOverlay(new BMapGL.Marker(new BMapGL.Point(item[0], item[1])));
-
-                var opts = {
-                    position: new BMapGL.Point(item[0], item[1]), // 指定文本标注所在的地理位置
-                    offset: new BMapGL.Size(12, -30) // 设置文本偏移量
-                };
-                // 创建文本标注对象
-                var label = new BMapGL.Label(item[2], opts);
-                // 自定义文本标注样式
-                label.setStyle({
-                    color: color,
-                    borderRadius: '5px',
-                    borderColor: '#ccc',
-                    padding: '10px',
-                    fontSize: '13px',
-                    height: '20px',
-                    lineHeight: '20px',
-                    fontFamil: '微软雅黑'
-                });
-                map.addOverlay(label);
+                addPosition(item[0], item[1], item[2])
             })
         }
 
-        function removeOverlay(array) {
+        function addPosition(x, y, title) {
+            // 点标记显示内容，HTML要素字符串 <input type="text" value="'+title+'" style="font-weight: bold;">
+            var markerContent = `
+            <div><div class="custom-content-marker"> 
+            <img src="https://a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-red.png">
+            </div></div>`;
 
-            var allOverlay = map.getOverlays();
-            allOverlay.map(overlay => {
-                array.forEach(function (item, index) {
-                    if (overlay.content == item[2]) {
-                        overlay.hide()
-                        map.removeOverlay(overlay);
-                    }
-                })
-            })
-        }
-
-        try {
-            // addSubway(map, point);
-        } catch (err) {
-            console.error('addSubway', err)
-        }
-
-        function addSubway(map, point) {
-            // 创建 LocalSearch 实例
-            const localSearch = new BMapGL.LocalSearch(map, {
-                onSearchComplete: function (results) {
-                    // 搜索完成后的回调函数
-                    if (localSearch.getStatus() === BMapGL.SearchResult.SEARCH_SUCCESS) {
-                        // 搜索成功
-                        results.forEach(result => {
-                            const marker = new BMapGL.Marker(result.location);
-                            map.addOverlay(marker);
-
-                            // 创建信息窗口
-                            const infoWindow = new BMapGL.InfoWindow(result[2], {
-                                width: 200, // 信息窗口宽度
-                                height: 100, // 信息窗口高度
-                                // '地铁站信息' // 信息窗口标题
-                            });
-
-                            // 为标记添加点击事件
-                            marker.addEventListener('click', function () {
-                                this.openInfoWindow(infoWindow);
-                            });
-                        });
-                    } else {
-                        // 搜索失败
-                        console.error('搜索失败');
-                    }
-                }
+            const item = bd09ToGcj02(x, y)
+            const marker = new AMap.Marker({
+                position: new AMap.LngLat(item[0], item[1]), //Marker 经纬度
+                content: markerContent, //将 html 传给 content
+                // 显示标题
+                label: {
+                    content: title,
+                    direction: top
+                },
+                // 鼠标滑过时显示
+                title: title,
+                offset: new AMap.Pixel(-13, -30), //以 icon 的 [center bottom] 为原点
             });
 
-            // 搜索地铁站
-            localSearch.searchNearby('地铁站', point, 5000); // 在点周围1000米范围内搜索地铁站
+            map.add(marker);
         }
 
-        try {
-            // 创建公交路径搜索实例
-            const transit = new BMap.TransitRoute(map, {
-                renderOptions: { map: map, panel: "panel" },
-                policBMAP_TRANSIT_POLICY_LEAST_TIME
-            });
-        } catch (err) {
-            console.error('TransitRoute', err)
+        // 常量定义
+        function bd09ToGcj02(bd_lon, bd_lat) {
+            const x_pi = 3.14159265358979324 * 3000.0 / 180.0;
+            // 百度坐标系 (BD-09) 转换为高德坐标系 (GCJ-02)
+            var x = bd_lon - 0.0065;
+            var y = bd_lat - 0.006;
+            var z = Math.sqrt(x * x + y * y) - 0.00002 * Math.sin(y * x_pi);
+            var theta = Math.atan2(y, x) - 0.000003 * Math.cos(x * x_pi);
+            var gg_lon = z * Math.cos(theta);
+            var gg_lat = z * Math.sin(theta);
+            return [gg_lon, gg_lat];
         }
 
         // 查询公交路径
@@ -177,22 +141,10 @@
             const start = document.getElementById("start").value;
             const end = document.getElementById("end").value;
             if (start && end) {
-                map.clearOverlays();
-                transit.search(start, end);
+
             } else {
                 alert("请输入起点和终点");
             }
-        }
-
-
-        try {
-            // 创建自驾路径搜索实例
-            const driving = new BMap.DrivingRoute(map, {
-                renderOptions: { map: map, panel: "panel" },
-                policBMAP_DRIVING_POLICY_LEAST_TIME
-            });
-        } catch (err) {
-            console.error('DrivingRoute', err)
         }
 
         // 查询自驾路径
@@ -200,8 +152,7 @@
             const start = document.getElementById("start").value;
             const end = document.getElementById("end").value;
             if (start && end) {
-                map.clearOverlays();
-                driving.search(start, end);
+
             } else {
                 alert("请输入起点和终点");
             }
@@ -209,5 +160,50 @@
 
     </script>
 </body>
+
+<link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />
+<style>
+    html,
+    body,
+    #container {
+        height: 100%;
+        width: 100%;
+    }
+
+    .custom-content-marker {
+        position: relative;
+        width: 25px;
+        height: 34px;
+    }
+
+    .custom-content-marker img {
+        width: 100%;
+        height: 100%;
+    }
+
+    .custom-content-marker .close-btn {
+        position: absolute;
+        top: -6px;
+        right: -8px;
+        width: 15px;
+        height: 15px;
+        font-size: 12px;
+        background: #ccc;
+        border-radius: 50%;
+        color: #fff;
+        text-align: center;
+        line-height: 15px;
+        box-shadow: -1px 1px 1px rgba(10, 10, 10, .2);
+    }
+
+    .custom-content-marker .close-btn:hover {
+        background: #666;
+    }
+
+    .condition {
+        display: flex;
+        flex-direction: row
+    }
+</style>
 
 </html>
